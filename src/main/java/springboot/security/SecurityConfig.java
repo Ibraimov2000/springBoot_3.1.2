@@ -1,6 +1,7 @@
 package springboot.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,7 +18,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final UserDetailsService userDetailsService; // сервис, с помощью которого тащим пользователя
     private final LoginSuccessHandler loginSuccessHandler; // класс, в котором описана логика перенаправления пользователей по ролям
 
-    public SecurityConfig(UserDetailsService userDetailsService, LoginSuccessHandler loginSuccessHandler) {
+    public SecurityConfig(@Qualifier("userServiceImpl") UserDetailsService userDetailsService,
+                          LoginSuccessHandler loginSuccessHandler) {
         this.userDetailsService = userDetailsService;
         this.loginSuccessHandler = loginSuccessHandler;
     }
@@ -29,40 +31,30 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-
-        http.formLogin()
-                // указываем страницу с формой логина
-                .loginPage("/login")
-                //указываем логику обработки при логине
-                .successHandler(new LoginSuccessHandler())
-                // указываем action с формы логина
-                .loginProcessingUrl("/login")
-                // Указываем параметры логина и пароля с формы логина
-                .usernameParameter("j_username")
-                .passwordParameter("j_password")
-                // даем доступ к форме логина всем
-                .permitAll();
-
-        http.authorizeRequests()
+        http
+                .authorizeRequests()
                 .antMatchers("/login").anonymous()
-                // защищенные URL
-                .antMatchers("/admin/**").access("hasAuthority('ADMIN')")
-                .antMatchers("/userpage").access("hasAnyAuthority('ADMIN', 'USER')")
-                .anyRequest().authenticated();
+                .antMatchers("/admin").access("hasAuthority('ADMIN')")
+                .antMatchers("/user").access("hasAnyAuthority('ADMIN', 'USER')")
+                .anyRequest().authenticated()
+                .and()
+                .formLogin()
+                .loginPage("/login")
+                .loginProcessingUrl("/login")
+                .usernameParameter("j_email")
+                .passwordParameter("j_password")
+                .permitAll()
+                .successHandler(new LoginSuccessHandler());
 
         http.logout()
-                // разрешаем делать логаут всем
                 .permitAll()
-                // указываем URL логаута
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-                // указываем URL при удачном логауте
-                .logoutSuccessUrl("/login?logout")
-                //выклчаем кроссдоменную секьюрность (на этапе обучения неважна)
+                .logoutSuccessUrl("/login")
                 .and().csrf().disable();
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }

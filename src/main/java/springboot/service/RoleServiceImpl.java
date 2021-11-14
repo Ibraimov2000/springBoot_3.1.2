@@ -1,42 +1,29 @@
 package springboot.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import springboot.dao.RoleDao;
 import springboot.model.Role;
+import springboot.repository.RoleRepository;
+import springboot.service.RoleService;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
 @Transactional
 public class RoleServiceImpl implements RoleService {
 
-    @Autowired
-    private RoleDao roleDao;
+    private final RoleRepository roleRepository;
 
-    @Override
-    public void addRole(Role role) {
-        roleDao.addRole(role);
+    public RoleServiceImpl (RoleRepository roleRepository) {
+        this.roleRepository = roleRepository;
     }
 
     @Override
-    public void deleteRole(long id) {
-        roleDao.deleteRole(id);
-    }
-
-    @Override
-    public List<Role> getRoles() {
-        return roleDao.getRoles();
-    }
-
-    @Override
-    public Role getRoleById(long id) {
-        return roleDao.getRoleById(id);
-    }
-
-    @Override
-    public Role getRoleByName(String rolename) {
-        return roleDao.getRoleByName(rolename);
+    public Set<Role> getAllRoles() {
+        Iterable<Role>  iterable = roleRepository.findAll();
+        Set<Role> set = new HashSet<>();
+        iterable.forEach(set::add);
+        return set;
     }
 }

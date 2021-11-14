@@ -1,24 +1,14 @@
 package springboot.service;
 
-
 import springboot.model.User;
 
-import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
 
-    void deleteUser(long id);
-
-    void updateUser(User user);
-
     void createUser(User user);
-
-    List<User> getUsers();
-
-    User getUserById(long id);
-
-    User getUserByName(String name);
-
-    boolean isPasswordChanged (String password, String newPassword);
-
+    void deleteUser(long id);
+    void updateUser(User user);
+    Iterable<User> getUsers();
+    Optional<User> getUserById(Long id);
 }
